@@ -1,0 +1,144 @@
+• გლობალური კონფიგურაციის რეჟიმი
+– Router > enable
+– Router # config t
+– Router(config)#
+
+• ინტერფეისის კონფიგურირების რეჟიმი
+– Router > enable
+– Router # config t
+– Router(config)#interface ტიპი ნომერი (მაგ.: interface FastEthernet 0/0)
+– Router(config-if)#
+
+• მოწყობილობისთვის სახელის მინიჭება
+– Router > enable
+– Router # config t
+– Router(config)#Hostname სახელი (მაგ.: Hostname CiscoRouter)
+– CiscoRouter(config)#
+
+
+პრივილეგირებული რეჟიმის პაროლით დაცვა
+• არაშიფრირებული პაროლი
+– Router > enable
+– Router # config t
+– Router(config)#enable password პაროლი
+
+• დაშიფრული პაროლი
+– Router > enable
+– Router # config t
+– Router(config)#enable secret პაროლი
+
+
+ბრძანებათა კონსოლის დაცვა
+– Router > enable
+– Router # config t
+– Route(config)# line console 0
+– Router(config)# password პაროლი
+– Router(config)# login
+
+
+ვირტუალური ტერმინალის პორტების დაცვა
+– Router > enable
+– Router # config t
+– Route(config)# line vty 0 4
+– Router(config)# password პაროლი
+– Router(config)# login
+
+
+პაროლების დაშიფრვა
+– Router > enable
+– Router # config t
+– Route(config)# service password encryption
+
+ინტერფეისის კონფიგურაცია
+Router (config) #interface fastethernet 0/0
+Router (config-if) #description connection to Admin LAN
+Router (config-if) #ip address 192.168.2.1 255.255.255.0
+Router (config-if) #no shutdown
+Router (config-if) #exit
+Router(config) #interface serial 0/0/0
+Router (config-if) #description connection to Router2
+Router (config-if) #ip address 192.168.1.125 255.255.255.0
+Router (config-if) #clock rate 64000
+Router (config-if) #no shutdown
+
+
+Default მარშრუტის კონფიგურირება
+– Router > enable
+– Router # config t
+– Router(config)# ip route 0.0.0.0 0.0.0.0
+მიერთებული მარშრუტიზატორის ინტერფეისის
+IP-მისამართი
+
+
+
+DHCP სერვისის კონფიგურირება
+
+• ნაბიჯი I (DHCP მისამართების სივრცის შექმნა)
+– Router > enable
+– Router # config t
+– Route(config)#ip dhcp pool სახელი
+
+• ნაბიჯი II (ქსელის და ქვექსელის ნიღაბის მისამართების მითითება)
+– Router > enable
+– Router # config t
+– Router(config)#ip dhcp pool სახელი
+– Router(dhcp-config)# network (მაგ.:) 192.168.1.0 255.255.255.0~
+
+• ნაბიჯი III (IP მისამართების გამორიცხვა-დარეზერვება)
+– Router > enable
+– Router # config t
+– Route(config)#ip dhcp excluded-address (მაგ.:) 192.168.1.1 192.168.1.49
+
+• ნაბიჯი IV (DNS სერვერის დამისამართება)
+– Router > enable
+– Router # config t
+– Router(config)#ip dhcp pool სახელი
+– Router(dhcp-config)# network 192.168.1.0 255.255.255.0
+– Router(dhcp-config)#dns-server (მაგ.:)192.168.1.10
+
+• ნაბიჯი V (Gateway დამისამართება)
+– Router > enable
+– Router # config t
+– Router(config)#ip dhcp pool სახელი
+– Router(dhcp-config)# network 192.168.1.0 255.255.255.0
+– Router(dhcp-config)#default-router (მაგ.:) 192.168.1.1
+
+
+სარეზერვო ასლის შენახვა TFTP სერვერზე
+– Router>enable
+– Router#copy running-config startup-config
+Destination filename [startup-config] ?
+Building configuration ...
+[OK]
+
+– Router#copy startup-config tftp
+– Address or name of remote host []? 192.168.0.2
+– Destination filename [Router-confg]? sarezervo asli
+
+Writing startup-config.
+[OK - 502 bytes]
+
+502 bytes copied in 3.027 secs (0 bytes/sec)
+– Router#
+
+
+კონფიგურაციის პარამეტრების აღდგენა TFTP სერვერზე შენახული ასლიდან
+– Router#copy tftp running-config
+– Address or name of remote host []? 192.168.0.2
+– Source filename []? sarezervo_asli
+Destination filename [running-config] ?
+
+Accessing tftp://192.168.0.2/sarezervo_asli ...
+Loading sarezervo_asli from 192.168.0.2: !
+[OK - 502 bytes]
+
+502 bytes copied in 0.001 secs (502000 bytes/sec)
+– Router#
+&SYS-5-CONFIG_I: Configured from console by consol
+
+– Router#copy runn
+– Router#copy running-config startup-config
+Destination filename [startup-config] ?
+Building configuration ...
+[OK]
+Router#
