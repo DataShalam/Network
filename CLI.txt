@@ -149,3 +149,58 @@ Router#
 Static route 
 - ip route   172.16.0.0      255.255.255.0            200.200.200.2
 	           საბნეტი            გეითვეი           რომელ როუტერზე გადადის
+
+
+
+
+
+
+
+
+
+VLAN-ის შექმნა               Switch#show vlan-ით ნახავ კონფიგს
+
+• Switch(config)# vlan 10
+• Switch(config-vlan)# name VLAN10
+• Switch(config-vlan)# exit
+
+• Switch(config)# vlan 20
+• Switch(config-vlan)# name VLAN20
+• Switch(config-vlan)# exit
+
+ინტერფეისების VLAN-ში გაწევრიანება
+• Switch(config)#interface range fastEthernet 0/1-10
+• Switch(config-if-range)#switchport mode access
+• Switch(config-if-range)#switchport access vlan 10
+• Switch(config-if-range)#exit
+• Switch(config)#
+
+
+
+გარე გამავალ ინტერფეისზე ”Trunk Mode”-ის გააქტიურება
+• Switch>enable
+• Switch#config t
+• Enter configuration commands, one per line. End with CNTL/Z.
+• Switch(config)#interface fastEthernet 0/24
+• Switch(config-if)#switchport mode ?
+ access Set trunking mode to ACCESS unconditionally
+ dynamic Set trunking mode to dynamically negotiate access or trunk mode
+ trunk Set trunking mode to TRUNK unconditionally
+• Switch(config-if)#switchport mode trunk
+• Switch(config-if)#exit
+
+როუტერი თუა მსგავსი რაღაც
+Router(config)# interface g0/0.10
+Router(config-subif)# encapsulation dot1Q 10
+Router(config-subif)# ip address 192.168.10.1 255.255.255.0
+Router(config-subif)# exit
+
+Router(config)# interface g0/0.20
+Router(config-subif)# encapsulation dot1Q 20
+Router(config-subif)# ip address 192.168.20.1 255.255.255.0
+Router(config-subif)# exit
+
+Router(config)# interface g0/0
+Router(config-if)# no shutdown
+
+
