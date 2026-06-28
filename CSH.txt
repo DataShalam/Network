@@ -398,6 +398,62 @@ GO
 
 
 
+CREATE TABLE SalaryLog (
+  LogID INT IDENTITY PRIMARY KEY,
+  EmployeeID INT,
+  OldSalary DECIMAL(10,2),
+  NewSalary DECIMAL(10,2),
+  ChangedDate DATETIME DEFAULT GETDATE()
+);
+
+DECLARE @OldSalary DECIMAL(10,2);
+SELECT @OldSalary = Salary FROM Employees WHERE EmployeeID = 1;
+
+UPDATE Employees SET Salary = 4000 WHERE EmployeeID = 1;
+
+INSERT INTO SalaryLog (EmployeeID, OldSalary, NewSalary)
+VALUES (1, @OldSalary, 4000);
+
+
+
+
+-- ჯერ თანამშრომლები გადავიყვანოთ
+UPDATE Employees
+SET DepartmentID = 1
+WHERE DepartmentID = 5;
+
+-- შემდეგ პროექტებიც გადავიყვანოთ
+UPDATE Projects
+SET DepartmentID = 1
+WHERE DepartmentID = 5;
+
+-- ახლა უკვე შეგვიძლია წაშლა
+DELETE FROM Departments
+WHERE DepartmentID = 5;
+
+
+SELECT TOP 3 EmployeeID, FirstName, LastName, Salary
+INTO TopEarners
+FROM Employees
+ORDER BY Salary DESC;
+
+
+
+BEGIN TRANSACTION;
+
+BEGIN TRY
+  UPDATE Departments SET Budget = Budget - 5000 WHERE DepartmentID = 1;
+  UPDATE Departments SET Budget = Budget + 5000 WHERE DepartmentID = 2;
+  COMMIT TRANSACTION;
+  PRINT 'გადარიცხვა წარმატებით შესრულდა';
+END TRY
+BEGIN CATCH
+  ROLLBACK TRANSACTION;
+  PRINT 'შეცდომა: ' + ERROR_MESSAGE();
+END CATCH;
+
+
+
 
 
 
