@@ -1,72 +1,535 @@
-Nmap (ქსელის სკანირება & პორტები)
+CREATE TABLE dbo.Deposit (
+    -- DepositID: 1-დან 5 000 000-მდე, არ შეიძლება იყოს ცარიელი (NOT NULL)
+    DepositID INT NOT NULL,
+    
+    -- DepositAmount: თანხობრივი ველი, 2 ციფრი მძიმის შემდეგ
+    DepositAmount DECIMAL(18, 2) NULL,
+    
+    -- DepositTypeKey: მნიშვნელობები 1, 2 ან 3
+    DepositTypeKey TINYINT NULL,
+    
+    -- DepositInterestRate: მაქსიმუმ 50, 4 ციფრი მძიმის შემდეგ
+    DepositInterestRate DECIMAL(6, 4) NULL,
+    
+    -- Isresident: ველი იღებს მხოლოდ 0 ან 1-ს
+    Isresident BIT NULL,
+    
+    -- DepositProductKey: დასაშვები მნიშვნელობა 0-დან 50-მდე
+    DepositProductKey TINYINT NULL,
 
--nmap [IP_ან_დომენი] — საბაზისო სკანირება (ამოწმებს ყველაზე პოპულარულ 1000 პორტს).
--nmap -sS [IP] — Syn Scan (Stealth): მალული სკანირება, რომელიც ბოლომდე არ ასრულებს TCP კავშირს.
--nmap -sV [IP] — Version Detection: ადგენს პორტზე მომუშავე სერვისის ზუსტ ვერსიას (პატჩების შესამოწმებლად).
--nmap -O [IP] — OS Detection: ცდილობს გამოიცნოს ოპერაციული სისტემა.
--nmap -p [პორტი] [IP] — კონკრეტული პორტის სკანირება (მაგ: -p 80,443).
--nmap -A [IP] — Aggressive Scan: აერთიანებს OS-ის, ვერსიების დეტექციას, სკრიპტებს და traceroute-ს.  
-
-
-Whois, Nslookup, Traceroute
--whois [დომენი] — ინფორმაციის შეგროვება დომენზე: ვინ არის მფლობელი, რეგისტრატორი, საკონტაქტო იმეილი, შექმნისა და განახლების თარიღები.
--nslookup [დომენი] — DNS მოთხოვნა: პოულობს დომენის შესაბამის IP მისამართს (ან პირიქით).
-მაგალითად: nslookup google.com
--traceroute [IP_ან_დომენი] (Windows-ზე tracert) — მარშრუტის თვალთვალი: აჩვენებს ყველა "ჰოპს" (როუტერს/სერვერს), რომელსაც პაკეტი გაივლის შენი კომპიუტერიდან სამიზნემდე. გამოიყენება ქსელში პრობლემური წერტილის საპოვნელად.
-
-
-სესიის მიტაცება, IDS და ფაიერვოლი
--სესიის მიტაცება (Session Hijacking): თავდამსხმელის მიერ მომხმარებლის მიმდინარე აქტიური სესიის ID-ის (Session Token/Cookie) მოპარვა. შედეგად, ჰაკერი შედის სისტემაში მომხმარებლის სახელით, პაროლის ცოდნის გარეშე.
--IDS (Intrusion Detection System): შემოჭრების ამოცნობის სისტემა. ის აკვირდება ქსელურ ტრაფიკს, აანალიზებს საეჭვო აქტივობებს და აგენერირებს ალერტებს (გაფრთხილებებს). მნიშვნელოვანია: IDS მხოლოდ აფიქსირებს და არ ბლოკავს (ბლოკავს IPS).
--ფაიერვოლი (Firewall): ქსელური უსაფრთხოების ფილტრი. წინასწარ გაწერილი წესების (Rules) მიხედვით აკონტროლებს, რომელი ტრაფიკი შემოვიდეს ქსელში და რომელი გავიდეს.
--სატყუარა (Honeypot): განზრახ მოწყობილი, დაუცველი სერვერი ან სისტემა, რომლის მიზანია თავდამსხმელების მიტყუება, მათი ტაქტიკის შესწავლა და რეალური ქსელიდან ყურადღების გადატანა.
--სესიის დაცვის მექანიზმები: * HTTPS: შიფრავს ტრაფიკს კლიენტსა და სერვერს შორის (იცავს ტოკენს ქსელში მიყურადებისგან).
---ტოკენის დაცვა: HttpOnly და Secure ფლაგების დადება ქუქიებზე (Cookies), რათა JavaScript-მა ვერ მოიპაროს ისინი (XSS-ისგან დაცვა) და გადაიცეს მხოლოდ დაშიფრული არხით.
-
-
-ვებ-სერვერებისა და ვებ-აპლიკაციების გატეხვა, SQL ინექცია
--SQL ინექცია (SQLi): თავდასხმა, როდესაც ჰაკერს ვებ-გვერდის შესაყვან ველში (მაგ: საძიებო ზოლი, Login) შეაქვს მავნე SQL კოდი. თუ აპლიკაცია ამას არ ფილტრავს, კოდი სრულდება ბაზაში, რაც ჰაკერს აძლევს წვდომას დაფარულ მონაცემებზე.
-
-SQLi-სგან დაცვის გზები:
--პარამეტრიზებული მოთხოვნები (Parameterized Queries / Prepared Statements): კოდი და მომხმარებლის შემოტანილი მონაცემები მკაცრად განცალკევებულია. ბაზა მონაცემს განიხილავს როგორც უბრალო ტექსტს და არა ბრძანებას.
--ინპუტების ვალიდაცია (Input Validation): მხოლოდ ნებადართული სიმბოლოების/ფორმატის გატარება.
--ვებ-სერვერზე თავდასხმის მიზნები: მონაცემების მოპარვა (Data Theft), საიტის ვიზუალის შეცვლა (Defacement), სერვერის რესურსების გამოყენება (მაგ: ბოტნეტისთვის, მაინინგისთვის), შიდა ქსელში შეღწევა.
--პატჩების მართვა (Patch Management): ოპერაციული სისტემებისა და ვებ-სერვერების (Nginx, Apache) პროგრამული განახლებების დროული დაყენება, რათა დაიხუროს ცნობილი უსაფრთხოების ხვრელები (Vulnerabilities).
+    -- შეზღუდვების (Constraints) დამატება პირობების დასაცავად:
+    CONSTRAINT CHK_DepositID CHECK (DepositID BETWEEN 1 AND 5000000),
+    CONSTRAINT CHK_DepositTypeKey CHECK (DepositTypeKey IN (1, 2, 3)),
+    CONSTRAINT CHK_DepositInterestRate CHECK (DepositInterestRate <= 50.0000),
+    CONSTRAINT CHK_DepositProductKey CHECK (DepositProductKey BETWEEN 0 AND 50)
+);
 
 
-უკაბელო ქსელების უსაფრთხოება
-დაშიფვრის სტანდარტები (Wi-Fi):
--WEP — ძველი, გატეხილი და სრულიად დაუცველი.
--WPA2 — ამჟამად ყველაზე გავრცელებული, თუმცა მოწყვლადია KRACK თავდასხმის მიმართ.
--WPA3 — თანამედროვე და ყველაზე უსაფრთხო სტანდარტი (იცავს მძლავრი Brute-force-სგან).
+-- 1. ჯერ ვაშორებთ ძველ შეზღუდვას, რომელიც მაქსიმუმ 50-ს უშვებდა
+ALTER TABLE dbo.Deposit 
+DROP CONSTRAINT CHK_DepositProductKey;
 
--ღია (Public) Wi-Fi ქსელის რისკები: ტრაფიკის მარტივი მიყურადება (Sniffing), Man-in-the-Middle (MitM) თავდასხმები, ყალბი ცხელი წერტილების (Evil Twin) შექმნა ჰაკერების მიერ.
--Bluetooth-ის დაცვა: უხილავი (Non-discoverable) რეჟიმის ჩართვა, რეგულარული "დაწყვილებების" (Pairing) კონტროლი, მოძველებული მოწყობილობების წაშლა, პატჩინგი (BlueBorne-ის მსგავსი ვირუსებისგან დასაცავად).
+-- 2. ვცვლით მონაცემთა ტიპს TINYINT-დან SMALLINT-ზე, რათა დაეტიოს 500
+ALTER TABLE dbo.Deposit 
+ALTER COLUMN DepositProductKey SMALLINT;
 
-
-მობილური სისტემების უსაფრთხოება
--MDM (Mobile Device Management): პროგრამული უზრუნველყოფა, რომელიც კომპანიას საშუალებას აძლევს დისტანციურად მართოს, გააკონტროლოს და დააწესოს უსაფრთხოების წესები თანამშრომლების მობილურ მოწყობილობებზე.
--BYOD (Bring Your Own Device) კონცეფცია და რისკები: როცა თანამშრომელს სამუშაოდ საკუთარი, პირადი ტელეფონი/ლეპტოპი მოაქვს.
-
-რისკები: კომპანიის სენსიტიური მონაცემების გაჟონვა პირადი აპლიკაციებიდან, მოწყობილობის დაკარგვის რისკი, ვირუსების შემოტანა შიდა ქსელში.
--მობილური მოწყობილობის დაცვა: სრული დისკის დაშიფვრა (Full Disk Encryption), დისტანციური წაშლის (Remote Wipe) ფუნქციის აქტივაცია (დაკარგვის შემთხვევისთვის), ბიომეტრიული დაცვა.
--აპლიკაციების უსაფრთხო წყაროები: მხოლოდ ოფიციალური მარკეტები (Google Play, Apple App Store). გვერდითი გადმოწერების (Sideloading / APK) აკრძალვა.
--ძირითადი თავდასხმის ვექტორები: მავნე აპლიკაციები (Malware), ფიშინგ ბმულები (SMS-ით — Smishing), დაუცველი Wi-Fi ქსელები, OS-ის მოძველებული ვერსიები.
+-- 3. ვამატებთ ახალ შეზღუდვას 0-დან 500-მდე მნიშვნელობებისთვის
+ALTER TABLE dbo.Deposit 
+ADD CONSTRAINT CHK_DepositProductKey_New CHECK (DepositProductKey BETWEEN 0 AND 500);
 
 
-IoT (ნივთების ინტერნეტი) და ღრუბლოვანი სისტემები
--IoT დაუცველობის მიზეზები: სუსტი ან ქარხნული (Default) პაროლები, განახლებების (პატჩების) არარსებობა მწარმოებლის მხრიდან, შეზღუდული გამოთვლითი რესურსი (რის გამოც ძლიერ შიფრაციას ვერ ქაჩავს).
--IoT-მოწყობილობის დაცვა: ქარხნული პაროლების დაუყოვნებლივ შეცვლა, ცალკე იზოლირებულ ქსელში (VLAN) მოთავსება, გამოუყენებელი პორტების/სერვისების (მაგ: Telnet, Universal Plug and Play) გამორთვა.
--ღრუბლოვანი გამოთვლის (Cloud) რისკები: მონაცემების გაჟონვა არასწორი კონფიგურაციის გამო (Misconfiguration), არასანქცირებული წვდომა API-ებზე, ანგარიშების მიტაცება (Account Hijacking).
--გაზიარებული პასუხისმგებლობის მოდელი (Shared Responsibility Model): * Cloud პროვაიდერი (მაგ: AWS, Azure): პასუხისმგებელია თავად ღრუბლის უსაფრთხოებაზე (ფიზიკური სერვერები, ჰიპერვიზორი, ქსელი).
--კლიენტი (შენ): პასუხისმგებელია იმაზე, რაც დევს ღრუბელში (მონაცემები, აპლიკაციის კოდი, მომხმარებლების წვდომები/IAM, პაროლები).
 
 
-კრიპტოგრაფია
--კრიპტოანალიზი (Cryptoanalysis): მეცნიერება და პრაქტიკა, რომელიც შეისწავლის შიფრატების გატეხვის, საიდუმლო გასაღების გაგებისა და ინფორმაციის დეკოდირების გზებს (კრიპტოგრაფიული სისტემების სისუსტეების პოვნა).
+BEGIN TRY
+    -- ტრანზაქციის დაწყება
+    BEGIN TRANSACTION;
 
-თავდასხმები:
--Brute-Force: ყველა შესაძლო სიმბოლოს კომბინაციის (პაროლის ან გასაღების) სათითაოდ, ბრმად გადარჩევა, სანამ სწორი არ მოიძებნება.
--Man-in-the-Middle (MitM): თავდამსხმელი ფარულად ჯდება ორ კომუნიკატორს (მაგ: შენსა და ბანკის საიტს) შორის, უსმენს ან ცვლის მათ შორის გაცვლილ ინფორმაციას.
--PKI (Public Key Infrastructure): ღია გასაღების ინფრასტრუქტურა. სისტემა, რომელიც მართავს ციფრულ სერტიფიკატებსა და ასიმეტრიულ შიფრაციას (ღია და დახურული გასაღებების წყვილს). მისი მთავარი რგოლია CA (Certificate Authority) — სანდო მესამე მხარე, რომელიც გასცემს სერტიფიკატებს.
--ელ. ფოსტის შიფრაცია: ძირითადად გამოიყენება PGP (Pretty Good Privacy) ან S/MIME პროტოკოლები. ისინი უზრუნველყოფენ წერილის შინაარსის დაშიფვრას (კონფიდენციალურობას) და ციფრულ ხელმოწერას (ავთენტურობას).
+    -- პირველი ჩანაწერი
+    INSERT INTO dbo.Deposit (DepositID, DepositAmount, DepositTypeKey, DepositInterestRate, Isresident, DepositProductKey)
+    VALUES (105, 1500.50, 1, 8.5000, 1, 12);
+
+    -- მეორე ჩანაწერი
+    INSERT INTO dbo.Deposit (DepositID, DepositAmount, DepositTypeKey, DepositInterestRate, Isresident, DepositProductKey)
+    VALUES (201, 25000.00, 2, 12.2500, 0, 450); -- შეგახსენებთ, წინა დავალებით მაქსიმუმი 500 გახდა
+
+    -- მესამე ჩანაწერი
+    INSERT INTO dbo.Deposit (DepositID, DepositAmount, DepositTypeKey, DepositInterestRate, Isresident, DepositProductKey)
+    VALUES (310, 500.15, 3, 0.0000, 1, 5);
+
+    -- თუ აქამდე კოდი უშეცდომოდ მოვიდა, ვინახავთ ცვლილებებს
+    COMMIT TRANSACTION;
+    PRINT 'მონაცემები წარმატებით ჩაიყარა და დაიქომითდა!';
+END TRY
+BEGIN CATCH
+    -- შეცდომის შემთხვევაში ვაუქმებთ ყველაფერს, რაც ამ ტრანზაქციაში მოხდა
+    IF @@TRANCOUNT > 0
+    BEGIN
+        ROLLBACK TRANSACTION;
+    END
+    
+    -- შეცდომის შეტყობინების გამოტანა
+    PRINT 'დაფიქსირდა შეცდომა! ტრანზაქცია გაუქმდა (Rollback მოხდა).';
+    PRINT ERROR_MESSAGE();
+END CATCH;
+
+
+
+BEGIN TRY
+    BEGIN TRANSACTION;
+
+    -- დავააფდეითოთ პროდუქტის პროცენტი (DepositInterestRate) კონკრეტული ID-სთვის
+    UPDATE dbo.Deposit
+    SET DepositInterestRate = 14.5000
+    WHERE DepositID = 105;
+
+    COMMIT TRANSACTION;
+    PRINT 'მონაცემები წარმატებით განახლდა!';
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+    BEGIN
+        ROLLBACK TRANSACTION;
+    END
+    PRINT 'განახლებისას დაფიქსირდა შეცდომა! ტრანზაქცია გაუქმდა.';
+    PRINT ERROR_MESSAGE();
+END CATCH;
+
+
+BEGIN TRY
+    BEGIN TRANSACTION;
+
+    -- წავშალოთ ჩანაწერი, სადაც DepositID არის 310
+    DELETE FROM dbo.Deposit
+    WHERE DepositID = 310;
+
+    COMMIT TRANSACTION;
+    PRINT 'ჩანაწერი წარმატებით წაიშალა!';
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+    BEGIN
+        ROLLBACK TRANSACTION;
+    END
+    PRINT 'წაშლისას დაფიქსირდა შეცდომა! ტრანზაქცია გაუქმდა.';
+    PRINT ERROR_MESSAGE();
+END CATCH;
+
+--------------------------------------------------------------------
+
+1)დაწერეთ T-SQL სკრიპტი, რომელიც ითვლის პირველი 10 ნატურალური რიცხვის ჯამს WHILE ლუპის გამოყენებით.
+
+DECLARE @Counter INT = 1;
+DECLARE @Sum     INT = 0;
+
+WHILE @Counter <= 10
+BEGIN
+    SET @Sum = @Sum + @Counter;
+    SET @Counter = @Counter + 1;
+END
+
+PRINT 'pirveli ' + CAST(@Counter - 1 as NVARCHAR) + ' naturaluri ricxvis jami: ' + CAST(@Sum AS NVARCHAR);
+
+ 
+2) შექმენით T-SQL ფუნქცია, რომელიც იღებს მთელ რიცხვს ინფუთად და აბრუნებს მის კვადრატს.
+CREATE FUNCTION dbo.fn_GetSquare (@Number INT)
+RETURNS INT
+AS
+BEGIN
+    RETURN @Number * @Number;
+END;
+
+
+SELECT dbo.fn_GetSquare(5) AS Result;
+
+ 
+ 
+
+3) შექმენით T-SQL ფუნქცია, რომელიც იღებს ორ სტრინგს ინფუთად და აბრუნებს მათ შეერთებულ სტრინგს.
+CREATE FUNCTION dbo.fn_ConcatStrings (@String1 NVARCHAR(100), @String2 NVARCHAR(100))
+RETURNS NVARCHAR(200)
+AS
+BEGIN
+    RETURN CONCAT(@String1, @String2);
+END;
+
+
+SELECT dbo.fn_ConcatStrings('Hello, ', 'World!') AS CombinedText;
+
+ 
+ 
+
+4) შექმენით ტრიგერი, რომელიც აღრიცხავს კლიენტების ცხრილის ჩანაწერის წაშლას CustomerDeletions ცხრილში. (შექმენით ორივე ცხრილი თქვენი ფანტაზიით)
+CREATE TABLE Customers (
+    CustomerID INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100)
+);
+
+CREATE TABLE CustomerDeletions (
+    DeletionID INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerID INT,
+    CustomerName NVARCHAR(100),
+    Email NVARCHAR(100),
+    DeletedAt DATETIME DEFAULT GETDATE()
+);
+
+
+
+CREATE TRIGGER trg_AfterCustomerDelete
+ON Customers
+AFTER DELETE
+AS
+BEGIN 
+    INSERT INTO CustomerDeletions (CustomerID, CustomerName, Email)
+    SELECT CustomerID, CustomerName, Email
+    FROM deleted;
+END;
+
+
+
+
+
+
+
+1) შექმენით ცხრილი სახელად Employees შემდეგი სვეტებითა და შეზღუდვებით
+•	EmployeeID (int, primary key, auto-increment)
+•	FirstName (nvarchar(50), cannot be NULL)
+•	LastName (nvarchar(50), cannot be NULL)
+•	HireDate (date, cannot be in the future) (მიმდინარე დეითზე მეტი ვერ იქნება)
+•	Salary (decimal(10, 2), must be greater than 0)
+•	Email (nvarchar(100), must be unique)
+
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY IDENTITY(1,1),
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    HireDate DATE NOT NULL,
+    Salary DECIMAL(10,2) NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+
+    CONSTRAINT CHK_HireDate_NotFuture CHECK (HireDate <= GETDATE()),
+    CONSTRAINT CHK_Salary_Positive CHECK (Salary > 0),
+    CONSTRAINT UQ_Email UNIQUE (Email)
+);
+ 
+
+2)ჩააინსერტეთ თეიბლში:
+1.	FirstName: 'John', LastName: 'Doe', HireDate: '2022-01-15', Salary: 50000, Email: 'john.doe@example.com'
+2.	FirstName: 'Jane', LastName: 'Smith', HireDate: '2023-03-22', Salary: 60000, Email: 'jane.smith@example.com'
+3.	FirstName: 'Alice', LastName: 'Johnson', HireDate: '2021-07-30', Salary: 70000, Email: 'alice.johnson@example.ge'
+4.	FirstName: 'Robert', LastName: 'Brown', HireDate: '2023-02-01', Salary: 65000, Email: 'robert.brown@example.com'
+5.	FirstName: 'Emily', LastName: 'Davis', HireDate: '2022-11-30', Salary: 72000, Email: 'emily.davis@example.com'
+6.	FirstName: 'Michael', LastName: 'Wilson', HireDate: '2023-01-10', Salary: 58000, Email: 'michael.wilson@example.ge'
+7.	FirstName: 'Sarah', LastName: 'Miller', HireDate: '2023-05-18', Salary: 64000, Email: 'sarah.miller@example.com'
+8.	FirstName: 'David', LastName: 'Taylor', HireDate: '2022-08-20', Salary: 68000, Email: 'david.taylor@example.com'
+9.	FirstName: 'Laura', LastName: 'Anderson', HireDate: '2021-12-25', Salary: 71000, Email: 'laura.anderson@example.ge'
+10.	FirstName: 'James', LastName: 'Thomas', HireDate: '2022-09-12', Salary: 69000, Email: 'james.thomas@example.com'
+
+INSERT INTO Employees (FirstName, LastName, HireDate, Salary, Email)
+VALUES
+    ('John', 'Doe', '2022-01-15', 50000, 'john.doe@example.com'),
+    ('Jane', 'Smith', '2023-03-22', 60000, 'jane.smith@example.com'),
+    ('Alice', 'Johnson', '2021-07-30', 70000, 'alice.johnson@example.ge'),
+    ('Robert', 'Brown', '2023-02-01', 65000, 'robert.brown@example.com'),
+    ('Emily', 'Davis', '2022-11-30', 72000, 'emily.davis@example.com'),
+    ('Michael', 'Wilson','2023-01-10', 58000, 'michael.wilson@example.ge'),
+    ('Sarah','Miller', '2023-05-18', 64000, 'sarah.miller@example.com'),
+    ('David', 'Taylor', '2022-08-20', 68000, 'david.taylor@example.com'),
+    ('Laura', 'Anderson', '2021-12-25', 71000, 'laura.anderson@example.ge'),
+    ('James', 'Thomas', '2022-09-12', 69000, 'james.thomas@example.com');
+
+ 
+
+
+
+3) დააფდეითეთ ხელფასი 65000-ზე და HireDate  '2022-06-01' ყველა თანამშრომლისთვის, რომლებსაც აქვთ გვარი 'Doe' და ხელფასი 60000-ზე ნაკლები. დარწმუნდით, რომ HireDate შეზღუდვა (არა მომავალში) (გეთდეითზე მეტი ვერ იქნება) არის გათვალისწინებული (ფილტრით)
+
+UPDATE Employees
+SET Salary = 65000,
+    HireDate = '2022-06-01'
+WHERE LastName = 'Doe' 
+  AND Salary < 60000
+  AND '2022-06-01' <= GETDATE();
+
+ 
+
+
+
+4) წაშალეთ მონაცემები თანამშრომლებზე, რომლებიც დაიქირავეს „2022-01-01“-მდე და აქვთ ხელფასი ყველა თანამშრომლის საშუალო ხელფასზე ნაკლები. გარდა ამისა, წაშალეთ მხოლოდ თანამშრომლები, რომელთა ელფოსტის მისამართები მთავრდება „.com“-ით.
+
+DELETE FROM Employees
+WHERE HireDate < '2022-01-01'
+  AND Salary < (SELECT AVG(Salary) FROM Employees)
+  AND Email LIKE '%.com';
+
+
+
+
+-- ========================================
+-- 1. DATABASE და SCHEMA
+-- ========================================
+CREATE DATABASE PracticeDB;
+GO
+
+USE PracticeDB;
+GO
+
+-- ========================================
+-- 2. CREATE TABLES
+-- ========================================
+
+CREATE TABLE Departments (
+    DepartmentID   INT IDENTITY(1,1) PRIMARY KEY,
+    DepartmentName NVARCHAR(100) NOT NULL,
+    Budget         MONEY NOT NULL,
+    ManagerID      INT NULL
+);
+GO
+
+CREATE TABLE Employees (
+    EmployeeID   INT IDENTITY(1,1) PRIMARY KEY,
+    FirstName    NVARCHAR(50)  NOT NULL,
+    LastName     NVARCHAR(50)  NOT NULL,
+    DepartmentID INT           NOT NULL REFERENCES Departments(DepartmentID),
+    Salary       DECIMAL(10,2) NOT NULL,
+    HireDate     DATE          NOT NULL,
+    IsActive     BIT           NOT NULL DEFAULT 1
+);
+GO
+
+CREATE TABLE Projects (
+    ProjectID    INT IDENTITY(1,1) PRIMARY KEY,
+    ProjectName  NVARCHAR(100) NOT NULL,
+    DepartmentID INT           NOT NULL REFERENCES Departments(DepartmentID),
+    Budget       MONEY         NOT NULL,
+    StartDate    DATE          NOT NULL,
+    EndDate      DATE          NULL,
+    Status       NVARCHAR(20)  NOT NULL DEFAULT N'Active'
+);
+GO
+
+-- ManagerID FK ბოლოს ვამატებთ, რადგან Employees უკვე უნდა არსებობდეს
+ALTER TABLE Departments
+ADD CONSTRAINT FK_Departments_Manager
+FOREIGN KEY (ManagerID) REFERENCES Employees(EmployeeID);
+GO
+
+-- ========================================
+-- 3. INSERT — Departments (ManagerID-ის გარეშე ჯერ)
+-- ========================================
+
+INSERT INTO Departments (DepartmentName, Budget, ManagerID) VALUES
+(N'IT',           50000, NULL),
+(N'HR',           30000, NULL),
+(N'Finance',      45000, NULL),
+(N'Marketing',    25000, NULL),
+(N'Operations',   12000, NULL);
+GO
+
+-- ========================================
+-- 4. INSERT — Employees
+-- ========================================
+
+INSERT INTO Employees (FirstName, LastName, DepartmentID, Salary, HireDate, IsActive) VALUES
+(N'გიორგი',    N'მელიქიშვილი', 1, 4500.00, '2019-03-15', 1),
+(N'ნინო',      N'ბერიძე',       1, 3800.00, '2020-07-01', 1),
+(N'დავით',     N'კვარაცხელია',  1, 5200.00, '2018-01-10', 1),
+(N'მარიამი',   N'ჯავახიშვილი',  2, 2900.00, '2021-05-20', 1),
+(N'ლუკა',      N'გაბეჩავა',     2, 3100.00, '2020-11-03', 1),
+(N'სოფია',     N'ბეგიაშვილი',   2, 2600.00, '2022-02-14', 0),
+(N'ლევანი',    N'ხარაძე',       3, 6000.00, '2017-08-22', 1),
+(N'ანი',       N'მაისაშვილი',   3, 4800.00, '2019-12-01', 1),
+(N'გვანცა',    N'ელიაშვილი',    4, 3300.00, '2021-09-15', 1),
+(N'ირაკლი',   N'დოლიძე',       4, 2800.00, '2022-06-30', 0),
+(N'თამარი',    N'ჩიქოვანი',     5,  1900.00, '2023-01-05', 1),
+(N'ზურაბი',    N'ნადარეიშვილი', 5, 2100.00, '2023-03-10', 0);
+GO
+
+-- ManagerID-ების განახლება
+UPDATE Departments SET ManagerID = 3  WHERE DepartmentID = 1;  -- დავით IT-ის მენეჯერი
+UPDATE Departments SET ManagerID = 5  WHERE DepartmentID = 2;  -- ლუკა HR-ის მენეჯერი
+UPDATE Departments SET ManagerID = 7  WHERE DepartmentID = 3;  -- ლევანი Finance-ის მენეჯერი
+UPDATE Departments SET ManagerID = 9  WHERE DepartmentID = 4;  -- გვანცა Marketing-ის მენეჯერი
+UPDATE Departments SET ManagerID = 11 WHERE DepartmentID = 5;  -- თამარი Operations-ის მენეჯერი
+GO
+
+-- ========================================
+-- 5. INSERT — Projects
+-- ========================================
+
+INSERT INTO Projects (ProjectName, DepartmentID, Budget, StartDate, EndDate, Status) VALUES
+(N'ვებ პლატფორმა',      1, 15000, '2024-01-01', NULL,         N'Active'),
+(N'მობილური აპი',       1,  8000, '2024-02-01', NULL,         N'Active'),
+(N'API ინტეგრაცია',     1,  5000, '2023-06-01', '2023-12-31', N'Completed'),
+(N'თანამშრომლების CRM', 2,  6000, '2024-01-15', NULL,         N'Active'),
+(N'ონბორდინგ სისტემა',  2,  3500, '2023-01-01', '2023-08-01', N'Completed'),
+(N'ბიუჯეტის ანალიზი',  3, 12000, '2024-03-01', NULL,         N'Active'),
+(N'ბრენდინგ კამპანია',  4,  9000, '2024-02-15', NULL,         N'Active'),
+(N'სოც-მედია სტრატეგია',4,  4000, '2023-09-01', '2024-01-01', N'Completed'),
+(N'საწყობის ოპტიმიზაცია',5, 7000, '2024-01-20', NULL,        N'Pending'),
+(N'ლოჯისტიკა 2024',     5,  2500, '2024-04-01', NULL,         N'Pending');
+GO
+
+-- ========================================
+-- 6. გადამოწმება
+-- ========================================
+
+SELECT 'Departments' AS [ცხრილი], COUNT(*) AS [ჩანაწერები] FROM Departments
+UNION ALL
+SELECT 'Employees',  COUNT(*) FROM Employees
+UNION ALL
+SELECT 'Projects',   COUNT(*) FROM Projects;
+GO
+
+-- სრული სურათი JOIN-ით
+SELECT
+    e.EmployeeID,
+    e.FirstName + N' ' + e.LastName AS სახელი,
+    d.DepartmentName                AS დეპარტამენტი,
+    e.Salary                        AS ხელფასი,
+    e.HireDate                      AS დაქირავების_თარიღი,
+    CASE WHEN e.IsActive = 1 THEN N'აქტიური' ELSE N'არააქტიური' END AS სტატუსი
+FROM Employees e
+INNER JOIN Departments d ON e.DepartmentID = d.DepartmentID
+ORDER BY d.DepartmentName, e.Salary DESC;
+GO
+
+
+
+
+
+
+
+
+
+SELECT * FROM Employees;
+
+SELECT FirstName, LastName, Salary FROM Employees;
+
+SELECT * FROM Projects
+WHERE Budget > 5000;
+
+SELECT * FROM Employees e
+ORDER BY e.Salary DESC;
+
+Select * fROM Departments;
+
+SELECT * FROM Employees e
+INNER JOIN Departments d ON e.DepartmentID = d.DepartmentID
+
+---------------------------------------------------------------
+
+
+INSERT INTO Departments
+VALUES('IT', 50000, NULL)
+
+
+SELECT * FROM Projects
+
+INSERT INTO Employees
+VALUES('გიორგი', 'მელიქიშვილი', 1, 2500, GETDATE(), 1)
+
+INSERT INTO Projects
+VALUES('TEST 1', 1, 1000, '2024-01-01', NULL, 'Pending'),
+		('TEST 2', 2, 2000, '2024-01-02', NULL, 'Active'),
+		('TEST 3', 3, 3000, '2024-01-03', '2025-03-03', 'Completed')
+
+
+CREATE TABLE HighEarners(
+EmployeeID int UNIQUE, 
+FullName nvarchar(100),
+Salary money
+)
+
+Insert INTO HighEarners (EmployeeID, FullName, Salary)
+SELECT e.EmployeeID, e.FirstName || ' ' || e.LastName, e.Salary 
+FROM Employees e
+WHERE e.Salary > 3000
+
+
+INSERT INTO Employees 
+  (FirstName, LastName, DepartmentID, Salary, HireDate, IsActive)
+OUTPUT INSERTED.EmployeeID
+VALUES 
+  (N'ნინო', N'ბერიძე', 2, 2800.00, GETDATE(), 1);
+
+
+----------------------------------------------------------------------------
+
+SELECT * FROM Employees;
+SELECT * FROM Projects;
+SELECT * FROM Departments;
+
+UPDATE Employees
+SET Salary = 3500
+WHERE EmployeeID=1
+
+
+
+UPDATE Employees
+SET Salary *= 1.1
+WHERE DepartmentID = 1
+
+
+UPDATE Employees
+SET Salary = (SELECT AVG(Salary) FROM Employees WHERE DepartmentID=1)
+WHERE DepartmentID = 2
+
+
+UPDATE p
+SET p.Status = N'Completed'
+FROM Projects p
+INNER JOIN Departments d ON p.DepartmentID = d.DepartmentID
+WHERE d.DepartmentName = N'IT';
+
+
+UPDATE Projects
+SET Budget = 20000,
+    EndDate = GETDATE(),
+    Status = N'Completed'
+WHERE ProjectID = 1;
+
+
+UPDATE Employees
+SET IsActive = 0
+OUTPUT DELETED.EmployeeID, INSERTED.IsActive AS NewStatus
+WHERE DepartmentID = 3;
+
+
+
+
+----------------------------------------------------------------------------
+
+-- ჯერ შეამოწმე:
+SELECT * FROM Employees WHERE EmployeeID = 10;
+
+-- შემდეგ წაშალე:
+DELETE FROM Employees WHERE EmployeeID = 10;
+
+
+
+DELETE FROM Employees
+WHERE IsActive = 0;
+
+
+
+DELETE FROM Projects
+WHERE DepartmentID = (
+  SELECT DepartmentID 
+  FROM Departments 
+  WHERE DepartmentName = N'IT'
+);
+
+
+
+DELETE FROM Projects
+OUTPUT DELETED.ProjectID, DELETED.ProjectName
+WHERE Status = N'Completed';
+
+
+
+
+DELETE e
+FROM Employees e
+INNER JOIN Departments d ON e.DepartmentID = d.DepartmentID
+WHERE d.Budget < 10000;
